@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "mbrlax"
+version = "0.1.0"
+description = "Model-based RL library"
+authors = ["Maria Kapros"]
+
+[tool.poetry.dependencies]
+python = ">=3.8, <=3.11"
+gym = "0.17.2"
+imageio = "2.8.0"
+imageio-ffmpeg = "0.4.2"
+mujoco-py = { version = "<2.1,>=2.0", optional = true }
+jupyter = "^1.0.0"
+ipykernel = "^6.9.1"
+gpflow = "^2.4.0"
+mypy = "^0.942"
+objax = "^1.6.0"
+tfp-nightly = "^0.17.0-alpha.20220406"
+
+[tool.poetry.dev-dependencies]
+pylint = "2.3.1"
+pytest = "^5.3.5"
+pytest-cov = "^2.9.0"
+pytest-mock = "3.1.0"
+pytest-mypy = "^0.6.2"
+pytest-pylint = "^0.17.0"
+taskipy = "^1.2.0"
+pytest-black = "^0.3.11"
+black = { version = "*", allow-prereleases = true }
+pytest-isort = "^1.0.0"
+autopep8 = "^1.6.0"
+gpjax = {path = "/Users/karyam/Desktop/disso/GPJax", develop=true}
+
+[tool.poetry.extras]
+mujoco-py = ["mujoco-py"] 
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
