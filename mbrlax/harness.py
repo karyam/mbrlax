@@ -1,27 +1,46 @@
-from mbrlax.metrics import Metrics
+from mbrlax.utils import EpisodeMetrics, Driver
 
+#TODO: clean hyperparameter setup
 class ExperimentHarness():
     def __init__(
         self,
+        logger,
+        logging_file,
         agent,
         env,
-        train_episodes, 
-        eval_episodes,
-        eval_every
+        max_train_episodes, 
+        max_eval_episodes,
+        num_random_policy_steps=1,
+        eval_every=1
     ):
+        self.logger = logger,
+        self.logging_file = logging_file
         self.agent = agent
         self.env = env
-        self.train_episodes = train_episodes
-        self.eval_episodes = eval_episodes
+        self.max_train_episodes = max_train_episodes
+        self.max_eval_episodes = max_eval_episodes
 
     def run(self):
-        train_metrics = Metrics(agent=self.agent)
+        #TODO: clean/general metrics implementation
+        episode_metrics = EpisodeMetrics(
+            env=self.env,
+            agent=self.agent,
+            logger=self.logger,
+            logging_file=self.logging_file 
+        )
+
         real_collect_driver = Driver(
             env=self.env,
             policy=self.agent.policy,
-            observers=[self.agent.real_replay_buffer.add_batch] + train_metrics)
-        
-        for episode in range(self.train_episodes):
-            real_collect_driver.run()
+            transition_observers=[self.agent.real_replay_buffer.push],
+            observers=[episode_metrics],
+            max_steps=31
+        )
+
+        #TODO: use num_random_policy_steps
+        for episode in range(self.max_train_episodes):
+            initial_time_step = self.env.reset()
+            real_collect_driver.run(initial_time_step)
             self.agent.train_model()
-            # self.agent.train_policy()
+            self.agent.train_policy()
+            #TODO: evaluate policy
