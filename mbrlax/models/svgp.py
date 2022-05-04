@@ -4,6 +4,7 @@ from gpjax.kernels import Kernel, SeparateIndependent, SquaredExponential
 from gpjax.mean_functions import Zero
 from gpjax.likelihoods import Gaussian, Likelihood
 import gpjax.models as models
+from gpjax.parameters import build_constrain_params
 
 from mbrlax.models.initializers import lengthscales_median, inducing_points_kmeans
 import jax.numpy as jnp
@@ -14,9 +15,20 @@ class SVGP(Callable, models.SVGP):
     def __init__(self, *args, prior: Callable=None, **kwargs):
         self.prior = prior
         super().__init__(*args, **kwargs)
+        self.constrain_params = build_constrain_params(self.get_transforms())
 
     def __call__(self, x, params):
         return self.predict_f(params=params, Xnew=x)
+
+    @property
+    def trainable_variables(self):
+        return self.get_params()
+
+    def loss_function_closure(self, num_data):
+        elbo = self.build_elbo(self.constrain_params, num_data)
+        def loss_function(params, batch):
+            return -elbo(params, batch)
+        return loss_function
 
     @classmethod
     def initialize(
@@ -24,7 +36,7 @@ class SVGP(Callable, models.SVGP):
         data:Tuple[jnp.ndarray],
         num_inducing: int,
         likelihood: Likelihood=None, 
-        mean_function:Callable=None,
+        mean_function:Callable="default",
         kernels:List[Kernel]=None,
         num_latent_gps:int=None,
         prior:Callable=None
@@ -35,7 +47,7 @@ class SVGP(Callable, models.SVGP):
         if likelihood is None:
             likelihood = Gaussian()
 
-        if mean_function is None: 
+        if mean_function == "default": 
             mean_function = Zero(output_dim=num_output_dims)
 
         if kernels is None:

@@ -14,7 +14,7 @@ class EpisodeMetrics:
     def rewards(self, states):
         inference_strategy = self.agent.environment_model.transition_model.inference_strategy
         if inference_strategy.obs_transform is not None:
-            feats = self.agent.inference_strategy.obs_transform(states)
+            feats = self.agent.inference_strategy.encoder(states)
         else: feats = states
         return -self.agent.objective(feats)
 
@@ -35,9 +35,7 @@ class EpisodeMetrics:
         return False
 
     def __call__(self, step):
-        obs_tm1, a_tm1, r_t, discount_t, obs_t = zip(
-            *self.agent.real_replay_buffer.get_last_n(self.episode_length))
-        print(f'Obs shape: {len(obs_tm1)}')
+        obs_tm1, a_tm1, r_t, discount_t, obs_t = self.agent.real_replay_buffer.get_last_n(self.episode_length)
         # print(f'Actions shape: {obs_tm1}')
 
         # rewards = self.rewards(obs_tm1 + obs_t[-1])

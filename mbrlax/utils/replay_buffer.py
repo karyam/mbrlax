@@ -21,31 +21,40 @@ class ReplayBuffer():
 
     def push(self, item):
         time_step, action, next_time_step = item
+        if next_time_step.discount is None: discount = 0 
+        else: discount = next_time_step.discount
         self.buffer.append((
             time_step.observation,
-            action,
+            action[None],
             next_time_step.reward,
-            next_time_step.discount,
+            discount,
             next_time_step.observation
         ))
 
     def add_batch(self, batch):
         for item in batch: self.push(item)
 
-    def sample(self, batch_size: int):
-        batch_size = min(len(self.buffer), batch_size)
-        obs_tm1, a_tm1, r_t, discount_t, obs_t = zip(
-            *random.sample(self.buffer, batch_size))
+    def format_data(self, transitions):
+        obs_tm1, a_tm1, r_t, discount_t, obs_t = zip(*transitions)
+        
         return (
             np.squeeze(np.stack(obs_tm1)), 
-            np.squeeze(np.asarray(a_tm1)), 
+            np.asarray(a_tm1), 
             np.asarray(r_t),
             np.asarray(discount_t) * discount_factor, 
             np.squeeze(np.stack(obs_t))
         )
 
+
+    def sample(self, batch_size: int):
+        batch_size = min(len(self.buffer), batch_size)
+        random_transitons = random.sample(self.buffer, batch_size)
+        return self.format_data(transitions=random_transitions)
+        
+
     def get_last_n(self, n: int):
-        return self.buffer[-n:]
+        last_n_transitions = self.buffer[-n:]
+        return self.format_data(transitions=last_n_transitions)
 
     def gather_all(self):
-        return zip(*self.buffer)
+        return self.format_data(transitions=self.buffer)

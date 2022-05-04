@@ -4,7 +4,6 @@ import tensorflow as tf
 from gpflow_pilco.moment_matching import GaussianMoments, GaussianMatch
 from mbrlax.models.initializers import initialize_gp_model
 
-#TODO: refactor to allow for arbitrary number of initial random policy collecion steps
 class GPPolicy:
     def __init__(
         self,
@@ -19,47 +18,46 @@ class GPPolicy:
         self.objective = objective
         self.optimizer = optimizer
         self.inference_strategy = inference_strategy
-        self.gp_model = None
+        self.model = None
 
-    def get_gp_data(self, experience, flatten=True):
+    def get_gp_data(self, experience, mode):
         obs_tm1, a_tm1, r_t, discount_t, obs_t = experience
         inputs, targets, rewards, discounts = obs_tm1, a_tm1, r_t, discount_t
-        
-        if flatten is True:
-            inputs = tf.reshape(inputs, (-1, inputs.shape[-1]))
-            targets = tf.reshape(targets, (-1, targets.shape[-1]))
-            rewards = tf.reshape(rewards, (-1, rewards.shape[-1]))
-            discounts = tf.reshape(discounts, (-1, discounts.shape[-1]))
-        
+        if self.inference_strategy.encoder is not None:
+            if mode == "init":
+                inputs = self.inference_strategy.encoder(inputs)
+            if mode == "train":
+                inputs = self.inference_strategy.propagate_encoder(inputs)
         return inputs, targets, rewards, discounts
+
+    def initialize(self, experience):
+        inputs, targets, _, _ = self.get_gp_data(experience, mode="init")
+        self.model = initialize_gp_model(
+            data=(inputs, targets), 
+            model_spec=self.gp_model_spec
+        )
     
     #TODO: refactor to be used as arg to jax.value_and_grad
-    def loss_closure(self, states, rewards, discounts, compile=True):
+    def loss_function(self, observations, rewards, discounts, compile=True):
         def closure() -> tf.Tensor:
-            return tf.foldl(lambda sum, state: sum + self.objective(state), states)
+            return tf.foldl(lambda sum, obs: sum + self.objective(obs), observations)
         if compile: closure = tf.function(closure)
         return closure
 
-    def action(self, time_step) -> Union[tf.Tensor, GaussianMatch]:
-        if self.gp_model is None:
-            return self.action_space.sample()
-        return self.inference_strategy.propagate_policy(
-            obs=time_step.observation,
-            policy_model=self.gp_model
-        )
+    def step(self, time_step, mode) -> Union[tf.Tensor, GaussianMatch]:
+        if mode == "random": return self.action_space.sample()
+        if mode == "collect": return self.model(time_step)
+        if mode == "plan":
+            return self.inference_strategy.propagate_policy(
+                obs=time_step.observation,
+                policy_model=self.model
+            )
 
     def train(self, experience):
-        # initialise the GP if None
-        inputs, targets, rewards, discounts = self.get_gp_data(experience)
-        if self.gp_model is None:
-            self.gp_model = initialize_gp_model(
-                data=(inputs, targets), 
-                model_spec=self.gp_model_spec
-            )
-        # update GP parameters to minimize loss
-        variables = self.gp_model.trainable_variables
+        inputs, targets, rewards, discounts = self.get_gp_data(experience, mode="train")
+        variables = self.model.trainable_variables
         loss = self.loss_closure(
-            states=inputs,
+            observations=inputs,
             rewards=rewards,
             discounts=discounts
         )

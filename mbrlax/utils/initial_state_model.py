@@ -1,6 +1,6 @@
 import abc
 import tensorflow as tf
-from gpflow_pilco.moment_matching import GaussianMoments
+from gpflow_pilco.moment_matching import GaussianMoments, GaussianMatch
 from gpflow.config import default_float
 
 #TODO: how will batches be handled by EnvironmentModel
@@ -24,7 +24,7 @@ class MomentsInitialStateModel(InitialStateModel):
     def __init__(self, distribution):
         super().__init__(distribution)
     
-    def sample(self, batch_size=1) -> GaussianMoments:
+    def sample(self, batch_size=1) -> GaussianMatch:
         #TODO: think anbout representing the GaussianMoments object as tensors/arrays
         #TODO: verify gpflow_pilco moment_matching supports batches of moments
         mx, Sxx = [], []
@@ -33,4 +33,5 @@ class MomentsInitialStateModel(InitialStateModel):
             Sxx.append(tf.cast(self.distribution.covariance(), default_float()))
         mx, Sxx = tf.stack(mx), tf.stack(Sxx)
         #TODO: understand what centered=True/False means
-        return GaussianMoments((mx, Sxx), centered=True)
+        x = GaussianMoments((mx, Sxx), centered=True)
+        return GaussianMatch(x=x, y=None, cross=None)

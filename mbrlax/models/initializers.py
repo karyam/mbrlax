@@ -1,13 +1,17 @@
 from typing import NamedTuple, Type, Callable, List, Optional
 import jax.numpy as jnp
+from gpflow.likelihoods import Likelihood
 from gpjax.likelihoods import Likelihood
-from gpjax.config import default_float
+from gpflow.config import default_float
+from gpflow.utilities import set_trainable
 from sklearn.cluster import MiniBatchKMeans
 from scipy.spatial.distance import pdist
 from tensorflow_probability.substrates import jax as tfp
 tfb = tfp.bijectors
 
 from mbrlax.models.utils import KernelRegressor, InverseLinkWrapper
+# from gpflow_pilco.models import (InverseLinkWrapper,
+#                                     KernelRegressor)
 
 class GPModelSpec(NamedTuple):
     type: Type
@@ -31,18 +35,21 @@ def initialize_gp_model(data, model_spec):
         prior=model_spec.prior
     )
 
-    if gp_model.q_mu.shape[-2] >= len(data[0]):
-        set_trainable(gp_model.inducing_variable, False)
+    svgp_params = gp_model.trainable_variables
+    print(svgp_params.keys())
 
-    if not model_spec.model_uncertainty:
-        set_trainable(gp_model.q_sqrt, False)
-        for kernel in gp_model.kernel.kernels:
-            set_trainable(kernel.variance, False)
-        gp_model = KernelRegressor(model=gp_model)
+    # if gp_model.q_mu.shape[-2] >= len(data[0]):
+    #     set_trainable(gp_model.inducing_variable, False)
 
-    if model_spec.invlink is not None:
-        gp_model = InverseLinkWrapper(model=gp_model, invlink=model_spec.invlink)
+    # if not model_spec.model_uncertainty:
+    #     set_trainable(gp_model.q_sqrt, False)
+    #     for kernel in gp_model.kernel.kernels:
+    #         set_trainable(kernel.variance, False)
+    #     gp_model = KernelRegressor(model=gp_model)
 
+    # if model_spec.invlink is not None:
+    #     gp_model = InverseLinkWrapper(model=gp_model, invlink=model_spec.invlink)
+    # return svgp_params
     return gp_model
 
 def inducing_points_kmeans(

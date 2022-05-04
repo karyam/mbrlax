@@ -1,7 +1,7 @@
 
 NoneType = type(None)
 
-class PathwiseSampling(InferenceStrategy):
+class ConditionalSampling(InferenceStrategy):
     def _init_(
         self,
         initial_state_distribution_model,

@@ -1,21 +1,21 @@
 class Driver():
     def __init__(
         self,
+        mode,
         env, 
         policy,
         transition_observers, 
-        observers=None, 
-        state_transform=None, 
+        observers=None,
         max_steps=100, 
         max_episodes=1
     ):
         self.env = env
+        self.mode = mode
         
         self.transition_observers = transition_observers
         self.observers = observers
 
         self.policy = policy
-        self.state_transform = state_transform
         self.runs_so_far = 0
         self.max_steps = max_steps
         self.max_episodes = max_episodes
@@ -23,8 +23,9 @@ class Driver():
     def run(self, time_step):
         step, episode = 0, 0
         while step < self.max_steps and episode < self.max_episodes:
-            action = self.policy.action(time_step)
+            action = self.policy.step(time_step, self.mode)
             next_time_step = self.env.step(action)
+            # if next_time_step.last(): next_time_step = env.reset()
 
             # push transition to replay buffer
             for observer in self.transition_observers:
@@ -34,6 +35,7 @@ class Driver():
             step += 1
             time_step = next_time_step
         self.runs_so_far += 1
+        
         # collect step metrics 
         for observer in self.observers: observer(self.runs_so_far)
             

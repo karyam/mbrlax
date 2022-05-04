@@ -17,6 +17,7 @@ objax = "^1.6.0"
 tfp-nightly = "^0.17.0-alpha.20220406"
 sklearn = "^0.0"
 dm-env = "^1.5"
+evosax = "^0.0.4"
 
 [tool.poetry.dev-dependencies]
 pylint = "2.3.1"

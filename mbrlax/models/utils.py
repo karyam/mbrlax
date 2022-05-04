@@ -36,6 +36,15 @@ class KernelRegressor(GPModelWrapper):
   def __call__(self, x: object, **kwargs):
     return self.predict_f(x, **kwargs)[0]
 
+  @property
+  def trainable_variables(self):
+    variables = self.model.get_params()
+    trainable_variables = {
+      "length",
+      "inducing_variables",
+      "q_mu"
+    }
+
 
 class InverseLinkWrapper(GPModelWrapper):
   def __init__(self, model: Callable, invlink: Callable):
@@ -43,3 +52,4 @@ class InverseLinkWrapper(GPModelWrapper):
 
   def __call__(self, *args, **kwargs):
     return self.invlink(self.model(*args, **kwargs))
+  

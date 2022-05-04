@@ -2,7 +2,7 @@
 __all__ = (
     "GPModelSpec",
     "initialize_gp_model",
-    "SVGP"
+    "SVGP",
 )
 
 

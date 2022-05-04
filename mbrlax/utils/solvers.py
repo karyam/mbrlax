@@ -44,6 +44,9 @@ class MomentMatchingEuler:
         Sff = match_drift.y.covariance()
 
         _mx = mx + dt * mf
+        print(f"Shape Sxx: {Sxx.shape}")
+        print(f"Shape (dt ** 2) * Sff: {((dt ** 2) * Sff).shape}")
+        print(f"Shape dt * (Sxf + tf.linalg.adjoint(Sxf)): {(dt * (Sxf + tf.linalg.adjoint(Sxf))).shape}")
         _Sxx = Sxx + dt * (Sxf + tf.linalg.adjoint(Sxf)) + (dt ** 2) * Sff
         if match_noise is not None:
             Sxz = match_drift.cross_covariance()

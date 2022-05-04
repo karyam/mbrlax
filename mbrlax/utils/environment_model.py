@@ -31,8 +31,8 @@ class EnvironmentModel(dm_env.Environment):
         self.reset_next_step = False
         initial_obs = self.initial_state_model.sample(self.batch_size)
         
-        if self.transition_model.inference_strategy.obs_transform is not None:
-            initial_obs = inference_strategy.propagate_encoder(initial_obs)
+        if self.transition_model.inference_strategy.encoder is not None:
+            initial_obs = self.transition_model.inference_strategy.propagate_encoder(initial_obs)
         
         self.time_step = dm_env.restart(initial_obs)
         return self.time_step
@@ -40,9 +40,7 @@ class EnvironmentModel(dm_env.Environment):
     #TODO: check for terminal obs acc to termination model and reset them
     def step(self, action: Any) -> dm_env.TimeStep:
         if self.reset_next_step: return self.reset()
-        assert action.shape[0] == self.batch_size #TODO: improve me
         obs = self.time_step.observation
-        # get already featurized next obs (if the case applies)
         next_obs = self.transition_model.step(obs, action)
         rewards = self.reward_model(next_obs)
         discount = tf.constant(1.0)
