@@ -24,11 +24,11 @@ class ReplayBuffer():
         if next_time_step.discount is None: discount = 0 
         else: discount = next_time_step.discount
         self.buffer.append((
-            time_step.observation,
+            time_step.observation[0],
             action[None],
             next_time_step.reward,
             discount,
-            next_time_step.observation
+            next_time_step.observation[0]
         ))
 
     def add_batch(self, batch):

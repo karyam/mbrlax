@@ -17,8 +17,8 @@ class ParticleInitialStateModel(InitialStateModel):
     def __init__(self, distribution):
         super().__init__(distribution)
 
-    def sample(self, batch_size=1):
-        return self.distribution.sample(sample_shape=batch_size)
+    def sample(self, seed, batch_size=1):
+        return self.distribution.sample(seed=seed, sample_shape=batch_size)
 
 class MomentsInitialStateModel(InitialStateModel):
     def __init__(self, distribution):

@@ -5,18 +5,17 @@ from gpflow_pilco.moment_matching import (
     GaussianMoments,
 )
 from mbrlax.utils.solvers import MomentMatchingEuler
+# from mbrlax.inference_strategy import InferenceStrategy
 import tensorflow as tf
 
-class MomentMatchingStrategy:
+class MomentMatchingStrategy():
     def __init__(
         self,
         noise: Callable = None,
         encoder: Callable = None,
         dt: float = 1.0
     ):
-        self.noise = noise
-        self.encoder = encoder
-        self.dt = dt
+        super().__init__(encoder=encoder, noise=noise, dt=dt)
 
     def propagate_encoder(self, obs:GaussianMatch) -> GaussianMatch:
         return moment_matching(obs.x, self.encoder)

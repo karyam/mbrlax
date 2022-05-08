@@ -23,7 +23,7 @@ class GPTransitionModel():
             model=self.model,
         )
 
-    def get_gp_data(self, experience):
+    def format_data(self, experience):
         obs_tm1, a_tm1, _, _, obs_t = experience
         obs = jnp.concatenate([obs_tm1, obs_t[-1, :][None]], axis=0)
         
@@ -36,17 +36,13 @@ class GPTransitionModel():
         return inputs, targets
     
     def initialize(self, experience):
-        inputs, targets = self.get_gp_data(experience)
+        inputs, targets = self.format_data(experience)
         self.model = initialize_gp_model(
             data=(inputs, targets),
             model_spec=self.gp_model_spec
-        )   
-
-    def loss_function(self, num_data):
-        return self.model.loss_function_closure(num_data)
+        )
 
     def train(self, experience):
-        inputs, targets = self.get_gp_data(experience)
+        inputs, targets = self.format_data(experience)
         init_params = self.model.trainable_variables
-        loss_function = self.model.loss_function_closure(inputs.shape[0])
-        return self.optimizer.minimize(loss_function, init_params, (inputs, targets))
+        return self.optimizer.minimize(init_params, (inputs, targets))

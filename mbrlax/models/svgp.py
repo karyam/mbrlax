@@ -17,18 +17,12 @@ class SVGP(Callable, models.SVGP):
         super().__init__(*args, **kwargs)
         self.constrain_params = build_constrain_params(self.get_transforms())
 
-    def __call__(self, x, params):
-        return self.predict_f(params=params, Xnew=x)
+    def __call__(self, x, **kwargs):
+        return self.predict_f(params=self.params, Xnew=x, **kwargs)
 
     @property
     def trainable_variables(self):
         return self.get_params()
-
-    def loss_function_closure(self, num_data):
-        elbo = self.build_elbo(self.constrain_params, num_data)
-        def loss_function(params, batch):
-            return -elbo(params, batch)
-        return loss_function
 
     @classmethod
     def initialize(

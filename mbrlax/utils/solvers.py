@@ -2,26 +2,21 @@
 import tensorflow as tf
 from typing import *
 from gpflow_pilco.moment_matching import GaussianMoments, GaussianMatch
+import jax.numpy as jnp
 
+# Adapted from https://github.com/j-wilson/GPflowPILCO
 
-class Euler:
+class ParticleEuler:
     @classmethod
-    def step(
-        cls: "Euler",
-        dt: float,
-        x: tf.Tensor,
-        dx_dt,
-        sqrt_cov
-    ) -> tf.Tensor:
+    def step(cls, key, dt, x, dx_dt, sqrt_cov):
         """
         Euler-Maruyama method for approximately solving SDEs.
         """
         _x = x + dt * dx_dt
-        if sqrt_cov is None:
-            return _x
+        if sqrt_cov is None: return _x
 
-        rvs = tf.random.normal(_x.shape, dtype=_x.dtype)
-        return _x + tf.linalg.matvec((dt ** 0.5) * sqrt_cov, rvs)
+        rvs = jnp.random.normal(key, _x.shape, dtype=_x.dtype)
+        return _x + jnp.matmul((dt ** 0.5) * sqrt_cov, rvs)
 
 
 class MomentMatchingEuler:
