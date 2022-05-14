@@ -10,7 +10,6 @@ class ExperimentHarness():
         max_train_episodes, 
         max_eval_episodes,
         num_random_policy_episodes=1,
-        eval_every=1
     ):
         self.logger = logger
         self.logging_file = logging_file
@@ -20,7 +19,8 @@ class ExperimentHarness():
         self.max_eval_episodes = max_eval_episodes
         self.num_random_policy_episodes = num_random_policy_episodes
 
-    def run(self):
+    def run(self, seed):
+        key = jax.random.PRNGKey(seed)
         #TODO: clean/general metrics implementation
         episode_metrics = EpisodeMetrics(
             env=self.env,
@@ -29,22 +29,21 @@ class ExperimentHarness():
             logging_file=self.logging_file 
         )
 
-        real_collect_driver = Driver(
-            mode="random",
+        real_driver = Driver(
             env=self.env,
             policy=self.agent.policy,
-            transition_observers=[self.agent.real_replay_buffer.push],
-            observers=[episode_metrics],
             max_steps=31
         )
     
-        #TODO: use num_random_policy_episodes
+        mode = "random"
         for episode in range(self.max_train_episodes):
-            initial_time_step = self.env.reset()
-            if episode == self.num_random_policy_episodes:
-                driver.mode = "collect"
-            if episode >= self.num_random_policy_episodes:
-                assert(driver.mode == "collect")
-            real_collect_driver.run(initial_time_step)
-            self.agent.train()
+            key, agent_key, driver_key = jax.random.split(key, 3)
+            if episode == self.num_random_policy_episodes: mode = "collect"
+            experience = real_driver.run(
+                key=driver_key,
+                policy_params=self.agent.policy.trainable_params,
+                mode=mode
+            )
+            self.agent.replay_buffer.add_batch(experience)
+            self.agent.train(agent_key)
             #TODO: evaluate policy

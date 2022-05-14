@@ -15,7 +15,6 @@ class CMAOptimiser:
         es_params=None, 
         callback=None
     ):
-        self.key = key
         self.fitness_function = fitness_function
         self.num_generations = num_generations
         self.strategy = CMA_ES(popsize=pop_size, num_dims=num_params)

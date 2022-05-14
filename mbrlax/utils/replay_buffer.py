@@ -31,7 +31,7 @@ class ReplayBuffer():
             next_time_step.observation[0]
         ))
 
-    def add_batch(self, batch):
+    def add_batch(self, batch:list):
         for item in batch: self.push(item)
 
     def format_data(self, transitions):

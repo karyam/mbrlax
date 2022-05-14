@@ -44,11 +44,10 @@ class GPPolicy:
                 policy_model=self.model
             )
 
-    def train(self, experience):
-        observations, actions, rewards, discounts = self.format_data(experience, mode="train")
+    def train(self, objective_closure):
         return self.optimizer.minimize(
             params=self.model.trainable_variables, 
-            data=(observations, actions, rewards, discounts)
+            closure=objective_closure
         )
         
 

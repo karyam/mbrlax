@@ -10,7 +10,7 @@ class KernelRegressor:
     return self.model(x, **kwargs)[0]
 
   @property
-  def trainable_variables(self):
+  def trainable_params(self):
     variables = self.model.get_params()
     kernel_lengthscales = []
     for i in range(len(variables["kernel"])):

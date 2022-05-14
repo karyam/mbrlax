@@ -1,24 +1,13 @@
 class Driver():
     def __init__(
         self,
-        mode,
         env, 
         policy,
-        transition_observers, 
-        observers=None,
-        max_steps=100, 
-        max_episodes=1
+        max_steps=100,
     ):
         self.env = env
-        self.mode = mode
-        
-        self.transition_observers = transition_observers
-        self.observers = observers
-
         self.policy = policy
-        self.runs_so_far = 0
         self.max_steps = max_steps
-        self.max_episodes = max_episodes
 
     def run(self, time_step):
         step, episode = 0, 0
@@ -38,4 +27,26 @@ class Driver():
         
         # collect step metrics 
         for observer in self.observers: observer(self.runs_so_far)
+
+    def run(self, key, policy_params, mode):
+        
+        def policy_step(input, tmp):
+            time_step, mode = input
+            action = self.policy.step(time_step, mode)
+            next_time_step = self.env.step(action)
+            carry, y = [next_time_step, mode], [next_time_step]
+            return carry, y
+
+        _, experience = jax.lax.scan(
+            policy_step,
+            [obs, state, policy_params, rng_episode],
+            [jnp.zeros((self.num_env_steps, 2))],
+        )
+        
+        
+        
+        return experience, 
+        
+            
+
             

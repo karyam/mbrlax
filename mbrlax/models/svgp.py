@@ -21,7 +21,7 @@ class SVGP(Callable, models.SVGP):
         return self.predict_f(params=self.params, Xnew=x, **kwargs)
 
     @property
-    def trainable_variables(self):
+    def trainable_params(self):
         return self.get_params()
 
     @classmethod

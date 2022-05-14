@@ -42,7 +42,7 @@ class GPTransitionModel():
             model_spec=self.gp_model_spec
         )
 
-    def train(self, experience):
+    def train(self, key, experience):
         inputs, targets = self.format_data(experience)
         init_params = self.model.trainable_variables
-        return self.optimizer.minimize(init_params, (inputs, targets))
+        return self.optimizer.minimize(key, init_params, (inputs, targets))
