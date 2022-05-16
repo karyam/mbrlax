@@ -16,8 +16,9 @@ class GPTransitionModel():
         self.reinitialize = reinitialize
         self.model = None
 
-    def step(self, obs, action):
+    def step(self, key, obs, action):
         return self.inference_strategy.step(
+            key=key,
             obs=obs,
             action=action,
             model=self.model,
@@ -26,11 +27,7 @@ class GPTransitionModel():
     def format_data(self, experience):
         obs_tm1, a_tm1, _, _, obs_t = experience
         obs = jnp.concatenate([obs_tm1, obs_t[-1, :][None]], axis=0)
-        
-        if self.inference_strategy is not None and \
-           self.inference_strategy.encoder is not None:
-            obs = self.inference_strategy.encoder(obs)
-        
+        obs = self.inference_strategy.encoder(obs)
         inputs = jnp.concatenate([obs[:-1, :], a_tm1], axis=-1)
         targets = obs[1:, :] - obs[:-1, :]
         return inputs, targets
@@ -42,7 +39,10 @@ class GPTransitionModel():
             model_spec=self.gp_model_spec
         )
 
-    def train(self, key, experience):
+    def train(self, key, objective):
         inputs, targets = self.format_data(experience)
-        init_params = self.model.trainable_variables
-        return self.optimizer.minimize(key, init_params, (inputs, targets))
+        return self.optimizer.minimize(
+            key=key, 
+            params=self.model.trainable_params, 
+            objective=objective
+        )

@@ -7,9 +7,9 @@ __all__ = (
     "ParticleEuler"
     "InitialStateModel",
     "ParticleInitialStateModel",
-    "MomentsInitialStateModel"
-    "sample_mvn"
-
+    "sample_mvn",
+    "policy_loss"
+    "model_loss"
 )
 
 from mbrlax.utils.replay_buffer import ReplayBuffer
@@ -19,7 +19,6 @@ from mbrlax.utils.environment_model import EnvironmentModel
 from mbrlax.utils.solvers import ParticleEuler, MomentMatchingEuler
 from mbrlax.utils.initial_state_model import (
     InitialStateModel,
-    ParticleInitialStateModel, 
-    MomentsInitialStateModel
+    ParticleInitialStateModel,
 )
 from mbrlax.utils.sampling import sample_mvn

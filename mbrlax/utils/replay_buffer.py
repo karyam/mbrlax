@@ -24,8 +24,8 @@ class ReplayBuffer():
         if next_time_step.discount is None: discount = 0 
         else: discount = next_time_step.discount
         self.buffer.append((
-            time_step.observation[0],
-            action[None],
+            time_step.observation,
+            action,
             next_time_step.reward,
             discount,
             next_time_step.observation[0]

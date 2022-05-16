@@ -21,21 +21,13 @@ class ExperimentHarness():
 
     def run(self, seed):
         key = jax.random.PRNGKey(seed)
-        #TODO: clean/general metrics implementation
-        episode_metrics = EpisodeMetrics(
-            env=self.env,
-            agent=self.agent,
-            logger=self.logger,
-            logging_file=self.logging_file 
-        )
-
+        mode = "random"
         real_driver = Driver(
             env=self.env,
             policy=self.agent.policy,
             max_steps=31
         )
-    
-        mode = "random"
+
         for episode in range(self.max_train_episodes):
             key, agent_key, driver_key = jax.random.split(key, 3)
             if episode == self.num_random_policy_episodes: mode = "collect"

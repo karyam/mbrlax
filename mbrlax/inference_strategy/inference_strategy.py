@@ -11,7 +11,7 @@ class InferenceStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def propagate_model(self, obs, action, model):
+    def propagate_model(self, key, obs, action, model):
         pass
 
     @abc.abstractmethod
@@ -19,5 +19,5 @@ class InferenceStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def step(self, obs, action, model):
+    def step(self, key, obs, action, model):
         pass

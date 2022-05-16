@@ -1,6 +1,8 @@
 from mbrlax.transition_model import GPTransitionModel
 from mbrlax.utils import EpisodeMetrics, Driver, EnvironmentModel, ReplayBuffer
 import jax.numpy as jnp
+from gpjax.parameters import build_constrain_params
+from functools import partial
 
 #TODO: meaningfully log training result
 class PilcoAgent():
@@ -10,55 +12,62 @@ class PilcoAgent():
         reward_model,
         initial_state_model,
         policy,
-        policy_training_iterations=1
     ):
         self.environment_model = EnvironmentModel(
             transition_model=transition_model,
             reward_model=reward_model,
             initial_state_model=initial_state_model
         )
-
         self.policy = policy
-        self.policy_training_iterations = policy_training_iterations
-
         self.replay_buffer = ReplayBuffer()
-        
         self.virtual_driver = Driver(
-            mode = "plan",
             env=self.environment_model,
             policy=self.policy,
             max_steps=31
         )
 
+    # @partial(jax.jit, static_argnums=(0,))
     def train_policy(self, key):        
-        if self.policy.model is None:
-            real_experience = self.real_replay_buffer.gather_all()
-            self.policy.initialize(real_experience)
-
-        def objective_closure(policy_params, key):
-            experience = self.virtual_collect_driver.run(
+        def policy_objective(key, policy_params):
+            _, long_term_reward = self.virtual_driver.run(
                 key=key,
                 policy_params=policy_params,
                 mode="plan"
             )
-            rewards, dones = experience
-            ep_mask = (jnp.cumsum(dones) < 1).reshape(self.num_env_steps, 1)
-            return jnp.sum(rewards * ep_mask)
-        
-        return self.policy.train(key, objective_closure)
+            return long_term_reward
+            
+        result = self.policy.train(key=key, objective=policy_objective)
+        return result
 
-    def train_model(self, key):
-        real_experience = self.real_replay_buffer.gather_all()
+    # @partial(jax.jit, static_argnums=(0,))
+    def train_model(self, key, experience):
+        svgp_transforms = self.environment_model.transition_model.model.get_transforms()
+        constrain_params = build_constrain_params(svgp_transforms)
+        elbo = self.environment_model.transition_model.model.build_elbo(
+        constrain_params=constrain_params, num_data=experience[0].shape[0])
+
+        def model_objective(model_params):
+            data = self.environment_model.transition_model.format_data(experience)
+            return - elbo(model_params, data)
         
-        if self.environment_model.transition_model.model is None \
-            or self.environment_model.transition_model.reinitialize:
-            self.environment_model.transition_model.initialize(real_experience)
-        
-        result = self.environment_model.transition_model.train(key, real_experience)
+        result = self.environment_model.transition_model.train(key=key, objective=model_objective)
+        return result
 
     def train(self, key):
         model_key, policy_key = jax.random.split(key)
-        print("Training dynamics...")
-        self.train_model(model_key)
+        experience = self.replay_buffer.gather_all()
+
+        if self.environment_model.transition_model.model is None \
+            or self.environment_model.transition_model.reinitialize:
+            print("Initialise dynamics.")
+            self.environment_model.transition_model.initialize(experience)
+    
+        # print("Training dynamics...")
+        # self.train_model(model_key, experience)
+        
+        if self.policy.model is None:
+            print("Initialise policy.")
+            self.policy.initialize(experience)
+        
         print("Training policy...")
         self.train_policy(policy_key)

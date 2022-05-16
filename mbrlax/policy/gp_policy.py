@@ -35,7 +35,7 @@ class GPPolicy:
             model_spec=self.gp_model_spec
         )
 
-    def step(self, time_step, mode) -> Union[tf.Tensor, GaussianMatch]:
+    def step(self, key, time_step, mode) -> Union[tf.Tensor, GaussianMatch]:
         if mode == "random": return self.action_space.sample()
         if mode == "collect": return self.model(time_step)
         if mode == "plan":
@@ -44,10 +44,11 @@ class GPPolicy:
                 policy_model=self.model
             )
 
-    def train(self, objective_closure):
+    def train(self, key, objective):
         return self.optimizer.minimize(
-            params=self.model.trainable_variables, 
-            closure=objective_closure
+            key=key,
+            params=self.model.trainable_params, 
+            objective=objective
         )
         
 
