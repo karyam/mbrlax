@@ -33,11 +33,6 @@ pytest-isort = "^1.0.0"
 autopep8 = "^1.6.0"
 gpjax = {path = "/Users/karyam/Desktop/disso/lib/GPJax", develop=true}
 
-gpflow_pilco = {path = "/Users/karyam/Desktop/disso/lib/GPflowPILCO", develop=true}
-
-#Takes too long to resolve
-#bsuite = {git = "https://github.com/deepmind/bsuite.git"}
-
 [tool.poetry.extras]
 mujoco-py = ["mujoco-py"] 
 
