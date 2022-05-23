@@ -5,4 +5,10 @@ This project uses [poetry](https://python-poetry.org/docs/) for managing depende
 
 `mbrlax` depends on [GPJAX](https://github.com/aidanscannell/GPJax) for implementing the`SVGP`module. Ensure you install `GPJax` locally and replace the path in the `pyproject.toml` file. Afterwards, setup the project with:
 
-```poetry install```
+```
+poetry install
+```
+
+```
+poetry shell
+```
