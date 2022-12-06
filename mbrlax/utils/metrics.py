@@ -1,4 +1,5 @@
 import numpy as np
+import abc
 
 #Adapted from https://github.com/j-wilson/GPflowPILCO
 
@@ -45,3 +46,33 @@ class EpisodeMetrics:
 
         # self.logger.info(metrics_logs)
         # self.logging_file.write(metrics_logs + "\n")
+
+class EpisodeMeteric(metaclass=abc.ABCMeta):
+    def __init__(self, name):
+        self.name = name
+    
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError('Metrics must define a call() member function')
+    
+    def reset(self):
+        raise NotImplementedError('Metrics must define a reset() member function')
+    
+    def result():
+        NotImplementedError('Metrics must define a result() member function')
+
+
+class AverageReturnMetric(EpisodeMeteric):
+    """Metric to compute the average return."""
+
+    def __init__(self, name='AverageReturn', dtype=tf.float32, batch_size=1):
+        super(AverageReturnMetric, self).__init__(name=name)
+
+    def __call__(self, trajectory):
+        
+
+    def reset():
+        pass
+    
+    def result():
+        """Returns the average reward and std across episodes."""
+        pass

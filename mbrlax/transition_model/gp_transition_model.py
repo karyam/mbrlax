@@ -8,7 +8,6 @@ class GPTransitionModel():
         inference_strategy,
         optimizer,
         reinitialize=True,
-        param_transform=None
     ):
         self.gp_model_spec = gp_model_spec
         self.inference_strategy = inference_strategy

@@ -27,7 +27,7 @@ class PilcoAgent():
         )
 
     # @partial(jax.jit, static_argnums=(0,))
-    def train_policy(self, key):        
+    def train_policy(self, key, policy_params):        
         def policy_objective(key, policy_params):
             _, long_term_reward = self.virtual_driver.run(
                 key=key,
@@ -36,8 +36,11 @@ class PilcoAgent():
             )
             return long_term_reward
             
-        result = self.policy.train(key=key, objective=policy_objective)
-        return result
+        return self.policy.train(
+            key=key, 
+            policy_params=policy_params,
+            objective=policy_objective
+        )
 
     # @partial(jax.jit, static_argnums=(0,))
     def train_model(self, key, experience):
@@ -46,14 +49,14 @@ class PilcoAgent():
         elbo = self.environment_model.transition_model.model.build_elbo(
         constrain_params=constrain_params, num_data=experience[0].shape[0])
 
-        def model_objective(model_params):
+        def model_objective(key, model_params):
             data = self.environment_model.transition_model.format_data(experience)
             return - elbo(model_params, data)
         
         result = self.environment_model.transition_model.train(key=key, objective=model_objective)
         return result
 
-    def train(self, key):
+    def train(self, key, policy_params):
         model_key, policy_key = jax.random.split(key)
         experience = self.replay_buffer.gather_all()
 

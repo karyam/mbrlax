@@ -21,15 +21,17 @@ class SGD:
     def minimize(self, key, params, objective):
         opt_state = self.optimizer.init(params)
         loss_history = []
-        grads = jax.jit(jax.value_and_grad(objective))
-        for epoch in range(self.num_epochs):
-            for batch in train_dataloader:
-                loss, grad = grads()
-                print(grad)
-                updates, opt_state = self.optimizer.update(grads, opt_state)
-                params = optax.apply_updates(params, updates)
-                loss_history.append(loss)
-            
-            self.callback(epoch, loss_history)
 
-        return loss_history
+        @jax.jit
+        def step(params, opt_state):
+            loss_value, grads = jax.value_and_grad(objective, argnums=1)(key, params)
+            updates, opt_state = self.optimizer.update(grads, opt_state, params)
+            params = optax.apply_updates(params, updates)
+            return params, opt_state, loss_value
+                
+        for epoch in range(self.num_epochs):
+            params, opt_state, loss_value = step(params, opt_state)
+            loss_history.append(loss_value)
+            if self.callback: self.callback(epoch, loss_value)
+
+        return loss_history, params

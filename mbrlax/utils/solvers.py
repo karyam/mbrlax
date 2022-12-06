@@ -1,6 +1,5 @@
 
 import tensorflow as tf
-from typing import *
 from gpflow_pilco.moment_matching import GaussianMoments, GaussianMatch
 import jax.numpy as jnp
 

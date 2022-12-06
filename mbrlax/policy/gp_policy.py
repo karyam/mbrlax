@@ -44,10 +44,10 @@ class GPPolicy:
                 policy_model=self.model
             )
 
-    def train(self, key, objective):
+    def train(self, key, policy_params, objective):
         return self.optimizer.minimize(
             key=key,
-            params=self.model.trainable_params, 
+            params=policy_params, 
             objective=objective
         )
         
